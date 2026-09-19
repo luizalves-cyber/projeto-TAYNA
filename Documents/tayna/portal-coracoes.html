@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffa6c8">
+<title>Portal de corações</title>
+<style>
+  :root {
+    --bg-top: #ffc2d9;
+    --bg-bottom: #ff8fb8;
+    --heart: #ff3d8b;
+    --frame: #fff5f9;
+    --ink: #7a1046;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    background-color: #ffa6c8;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--ink);
+  }
+
+  /* Corações */
+  #hearts {
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .heart {
+    position: absolute;
+    bottom: -180px;
+    line-height: 0;
+    filter: drop-shadow(0 6px 14px rgba(255, 61, 139, .25));
+    will-change: transform, opacity;
+    animation-name: subir;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    user-select: none;
+  }
+  .heart svg { width: 100%; height: 100%; display: block; }
+  @keyframes subir {
+    0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+    10%  { opacity: var(--op, .8); }
+    50%  { transform: translate(var(--sway, 30px), -55vh) rotate(var(--rot, 15deg)); }
+    90%  { opacity: var(--op, .8); }
+    100% { transform: translate(calc(var(--sway, 30px) * -1), -115vh) rotate(calc(var(--rot, 15deg) * -1)); opacity: 0; }
+  }
+
+  /* Foto */
+  main {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 20px;
+  }
+  .foto {
+    width: min(78vw, 420px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 10px solid var(--frame);
+    background: var(--frame);
+    box-shadow: 0 18px 50px rgba(160, 20, 90, .35);
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+  .foto:focus-visible { outline: 4px solid var(--ink); outline-offset: 6px; }
+  .foto img, .foto svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .dica {
+    font-size: 1rem;
+    color: var(--ink);
+    background: rgba(255, 245, 249, .7);
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+  input[type=file] { display: none; }
+  h2 {
+    max-width: min(90vw, 560px);
+    text-align: center;
+    font-size: clamp(1.4rem, 4.5vw, 2.1rem);
+    line-height: 1.25;
+    font-style: italic;
+    color: #fff5f9;
+    text-shadow: 0 2px 12px rgba(160, 20, 90, .55);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .heart { animation-duration: 20s !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="vidro" cx="35%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".75"/>
+      <stop offset="35%" stop-color="#ff8fb8" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="#ff2f86" stop-opacity=".35"/>
+    </radialGradient>
+  </defs>
+</svg>
+<div id="hearts" aria-hidden="true"></div>
+
+<main>
+  <button class="foto" id="foto" type="button" aria-label="Escolher foto">
+    <svg id="placeholder" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#fff5f9"/>
+      <path d="M100 138 C40 98 50 52 78 52 C90 52 98 60 100 68 C102 60 110 52 122 52 C150 52 160 98 100 138Z" fill="#ff8fb8"/>
+      <text x="100" y="170" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#7a1046">Clique para escolher sua foto</text>
+    </svg>
+  </button>
+  <input type="file" id="arquivo" accept="image/*">
+  <h2>Quando a comida é boa, eu como até a cozinheira</h2>
+  <p class="dica" id="dica">Toque na foto para trocar</p>
+</main>
+
+<script>
+  // Troca de foto
+  const foto = document.getElementById('foto');
+  const arquivo = document.getElementById('arquivo');
+  foto.addEventListener('click', () => arquivo.click());
+  arquivo.addEventListener('change', () => {
+    const f = arquivo.files[0];
+    if (!f) return;
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      foto.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = leitor.result;
+      img.alt = 'Foto escolhida';
+      foto.appendChild(img);
+    };
+    leitor.readAsDataURL(f);
+  });
+
+  // Corações subindo (grandes e translúcidos)
+  const area = document.getElementById('hearts');
+  const CAMINHO = 'M50 88 C8 58 6 22 28 14 C40 10 48 16 50 24 C52 16 60 10 72 14 C94 22 92 58 50 88Z';
+  const SVG = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="' + CAMINHO + '" fill="url(#vidro)" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>' +
+    '<ellipse cx="32" cy="30" rx="9" ry="5" transform="rotate(-35 32 30)" fill="rgba(255,255,255,.55)"/>' +
+    '</svg>';
+
+  function criarCoracao() {
+    const h = document.createElement('span');
+    h.className = 'heart';
+    h.innerHTML = SVG;
+    // menores em telas de celular
+    const escala = Math.min(1, Math.max(0.45, window.innerWidth / 900));
+    const tamanho = (70 + Math.random() * 130) * escala;
+    const duracao = 9 + Math.random() * 8;
+    h.style.left = (Math.random() * 100 - 5) + 'vw';
+    h.style.width = h.style.height = tamanho + 'px';
+    h.style.animationDuration = duracao + 's';
+    h.style.setProperty('--sway', (Math.random() * 80 - 40) + 'px');
+    h.style.setProperty('--rot', (Math.random() * 30 - 15) + 'deg');
+    h.style.setProperty('--op', (0.55 + Math.random() * 0.4).toFixed(2));
+    area.appendChild(h);
+    h.addEventListener('animationend', () => h.remove());
+  }
+
+  for (let i = 0; i < 8; i++) setTimeout(criarCoracao, i * 350);
+  setInterval(criarCoracao, window.innerWidth < 600 ? 900 : 700);
+</script>
+</body>
+</html>
